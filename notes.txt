@@ -1,0 +1,9 @@
+-How do we keep track of sleeping functions?
+	-A list? Similar to the ready thread list?
+	
+-If so,store the thread ID with the required ticks to wake it up.
+
+
+
+
+Interesting functions:

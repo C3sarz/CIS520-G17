@@ -91,9 +91,13 @@ timer_sleep (int64_t ticks)
 {
   int64_t start = timer_ticks ();
 
+  // Turn off INT or use SYNC primitive 
+  //Thread gets blocked
+  //Turn on INTs 
+
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+  // while (timer_elapsed (start) < ticks) //OLD
+  //   thread_yield ();                    //OLD
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
