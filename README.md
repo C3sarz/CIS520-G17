@@ -1,2 +1,10 @@
 # CIS520-G17
-KSU S2021
+----------------------------------------------------------------
+## Project 1
+# WIP
+----------------------------------------------------------------
+
+TODO List:
+-Alarm clock (timer)
+-Priority Scheluder
+-Advanced Scheduler
