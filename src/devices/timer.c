@@ -51,7 +51,7 @@ timer_init (void)
   list_init(&sleeping_thread_list);
 
   ////PROJECT 1 END////
-  
+
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -112,9 +112,8 @@ timer_sleep (int64_t ticks)
   current->wake_up_tick = start + ticks;            /* Sets wake up tick. */
 
   ASSERT (intr_get_level () == INTR_ON);
-
   intr_disable();
-  list_push_front(&sleeping_thread_list, &current); /* Adds it to list of sleeping threads. */
+  list_push_front(&sleeping_thread_list, &current->elem); /* Adds it to list of sleeping threads. */
   thread_block();
   intr_enable();
 
@@ -202,17 +201,26 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
 ///PROJECT 1 START///
 
-  struct thread * t;
-  int64_t ticks = timer_ticks ();   
+  int64_t ticks = timer_ticks();   
 
-if(!list_empty(&sleeping_thread_list))
-  for (t = list_begin(&sleeping_thread_list); t != list_end(&sleeping_thread_list); t = list_next(t))
-    if(ticks > t->wake_up_tick)
-    {
+  if(!list_empty(&sleeping_thread_list))
+  {
+    struct thread * t;
+    struct list_elem * temp_elem = list_front(&sleeping_thread_list);                                                            //Checks if list is empty
+  while (temp_elem != list_end(&sleeping_thread_list))   //Iterates through the list
+  {
+    t = list_entry(temp_elem,struct thread, elem);
+
+    if(ticks > t->wake_up_tick)                                                                         //Checks if thread is ready to wake up.
+    {      
+      temp_elem = list_remove(temp_elem);
       thread_unblock(t);
-      list_remove(t);
+      break;   
     }
-
+    else temp_elem = list_next(temp_elem);
+    
+  } 
+}
 ///PROJECT 1 END///
 
 }
