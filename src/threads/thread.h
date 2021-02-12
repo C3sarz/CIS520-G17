@@ -90,6 +90,12 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
+    ///PROJECT 1 START///
+
+    int64_t wake_up_tick;               /* Tick on which the thread should be unblocked by the timer. */
+    
+    ///PROJECT 1 END///
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 

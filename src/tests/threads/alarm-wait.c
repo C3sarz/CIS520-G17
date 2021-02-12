@@ -23,14 +23,6 @@ test_alarm_multiple (void)
 {
   test_sleep (5, 7);
 }
-
-// Project 0 changes
-void
-test_alarm_mega (void) 
-{
-  test_sleep (5, 70);
-}
-
 
 /* Information about the test. */
 struct sleep_test 

@@ -6,4 +6,11 @@
 
 
 
-Interesting functions:
+Modifications:
+
+-timer.c:
+	-new list sleeping_threads_list
+	-modified interrupt
+
+-thread.h:
+	-added wake up property

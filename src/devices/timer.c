@@ -30,6 +30,13 @@ static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
 
+///PROJECT 1 START///
+
+/* List to keep track of threads to be woken up by the timer */
+struct list sleeping_thread_list;
+
+////PROJECT 1 END////
+
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
 void
@@ -37,6 +44,14 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+
+  ///PROJECT 1 START///
+
+  /* Initialize sleeping thread list */
+  list_init(&sleeping_thread_list);
+
+  ////PROJECT 1 END////
+  
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -89,15 +104,23 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
-  int64_t start = timer_ticks ();
 
-  // Turn off INT or use SYNC primitive 
-  //Thread gets blocked
-  //Turn on INTs 
+  ///PROJECT 1 START///
+
+  struct thread * current = thread_current();       /* Gets current thread. */
+  int64_t start = timer_ticks ();                   /* Gets current system ticks. */
+  current->wake_up_tick = start + ticks;            /* Sets wake up tick. */
 
   ASSERT (intr_get_level () == INTR_ON);
-  // while (timer_elapsed (start) < ticks) //OLD
-  //   thread_yield ();                    //OLD
+
+  intr_disable();
+  list_push_front(&sleeping_thread_list, &current); /* Adds it to list of sleeping threads. */
+  thread_block();
+  intr_enable();
+
+
+  ////PROJECT 1 END////
+
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -169,13 +192,29 @@ timer_print_stats (void)
 {
   printf ("Timer: %"PRId64" ticks\n", timer_ticks ());
 }
-
+
 /* Timer interrupt handler. */
 static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+///PROJECT 1 START///
+
+  struct thread * t;
+  int64_t ticks = timer_ticks ();   
+
+if(!list_empty(&sleeping_thread_list))
+  for (t = list_begin(&sleeping_thread_list); t != list_end(&sleeping_thread_list); t = list_next(t))
+    if(ticks > t->wake_up_tick)
+    {
+      thread_unblock(t);
+      list_remove(t);
+    }
+
+///PROJECT 1 END///
+
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
