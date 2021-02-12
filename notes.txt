@@ -1,16 +1,13 @@
--How do we keep track of sleeping functions?
-	-A list? Similar to the ready thread list?
-	
--If so,store the thread ID with the required ticks to wake it up.
+==== Observations ====
 
+-The stack system to store sleeping threads could be significantly improved.
 
-
-
-Modifications:
+==== Modified files ====
 
 -timer.c:
 	-new list sleeping_threads_list
-	-modified interrupt
+	-modified timer_interrupt() function
+	-modified timer_sleep() function
 
 -thread.h:
 	-added wake up property

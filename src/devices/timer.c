@@ -107,16 +107,21 @@ timer_sleep (int64_t ticks)
 
   ///PROJECT 1 START///
 
-  struct thread * current = thread_current();       /* Gets current thread. */
-  int64_t start = timer_ticks ();                   /* Gets current system ticks. */
-  current->wake_up_tick = start + ticks;            /* Sets wake up tick. */
+  if(ticks <= 0)                                          /* Handles invalid cases. */
+  {
+    return;
+  }
+
+  struct thread * current = thread_current();             /* Gets current thread. */
+  int64_t start = timer_ticks ();                         /* Gets current system ticks. */
+  current->wake_up_tick = start + ticks;                  /* Sets wake up tick. */
 
   ASSERT (intr_get_level () == INTR_ON);
-  intr_disable();
-  list_push_front(&sleeping_thread_list, &current->elem); /* Adds it to list of sleeping threads. */
-  thread_block();
-  intr_enable();
 
+  intr_disable();                                         /* Turn OFF interrupts */
+  list_push_front(&sleeping_thread_list, &current->elem); /* Adds current thread to list of sleeping threads. */
+  thread_block();                                         /* Block sleeping threads */
+  intr_enable();                                          /* Turn ON interrupts */
 
   ////PROJECT 1 END////
 
