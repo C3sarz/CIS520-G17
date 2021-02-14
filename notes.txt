@@ -1,6 +1,5 @@
 ==== Observations ====
 
--The stack system to store sleeping threads could be significantly improved.
 
 ==== Modified files ====
 
@@ -8,6 +7,7 @@
 	-new list sleeping_threads_list
 	-modified timer_interrupt() function
 	-modified timer_sleep() function
+	-smaller sleep time comparator function (smaller_wakeup_tick)
 
 -thread.h:
 	-added wake up property

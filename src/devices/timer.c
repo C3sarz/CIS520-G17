@@ -32,7 +32,7 @@ static void real_time_delay (int64_t num, int32_t denom);
 
 ///PROJECT 1 START///
 
-/* List to keep track of threads to be woken up by the timer */
+/* ORDERED Min->Max list to keep track of threads to be woken up by the timer */
 struct list sleeping_thread_list;
 
 ////PROJECT 1 END////
@@ -99,6 +99,19 @@ timer_elapsed (int64_t then)
   return timer_ticks () - then;
 }
 
+///PROJECT 1 START///
+
+/* Returns TRUE if thread A wakes up sooner than Thread B */
+bool smaller_wakeup_tick(struct list_elem * elemA, struct list_elem * elemB, void * n)
+{
+ struct thread * threadA = list_entry(elemA ,struct thread, elem);
+ struct thread * threadB = list_entry(elemB ,struct thread, elem);
+
+ return threadA->wake_up_tick < threadB->wake_up_tick;
+}
+
+///PROJECT 1 END///
+
 /* Sleeps for approximately TICKS timer ticks.  Interrupts must
    be turned on. */
 void
@@ -107,21 +120,20 @@ timer_sleep (int64_t ticks)
 
   ///PROJECT 1 START///
 
-  if(ticks <= 0)                                          /* Handles invalid cases. */
+  if(ticks <= 0)                                                           /* Handles invalid cases. */
   {
     return;
   }
 
-  struct thread * current = thread_current();             /* Gets current thread. */
-  int64_t start = timer_ticks ();                         /* Gets current system ticks. */
-  current->wake_up_tick = start + ticks;                  /* Sets wake up tick. */
-
+  struct thread * current = thread_current();                              /* Gets current thread. */
+  int64_t start = timer_ticks ();                                          /* Gets current system ticks. */
+  current->wake_up_tick = start + ticks;                                   /* Saves tick on which thread will be woken up. */
   ASSERT (intr_get_level () == INTR_ON);
 
-  intr_disable();                                         /* Turn OFF interrupts */
-  list_push_front(&sleeping_thread_list, &current->elem); /* Adds current thread to list of sleeping threads. */
-  thread_block();                                         /* Block sleeping threads */
-  intr_enable();                                          /* Turn ON interrupts */
+  intr_disable();                                                                                   /* Turn OFF interrupts */
+  list_insert_ordered(&sleeping_thread_list, &current->elem, &smaller_wakeup_tick, NULL);           /* Adds current thread to ORDERED list of sleeping threads. */
+  thread_block();                                                                                   /* Block sleeping threads */
+  intr_enable();                                                                                    /* Turn ON interrupts */
 
   ////PROJECT 1 END////
 
@@ -204,29 +216,24 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
 
-///PROJECT 1 START///
+  ///PROJECT 1 START///
 
-  int64_t ticks = timer_ticks();   
+  int64_t ticks = timer_ticks();                                                              /* Get system ticks. */
 
-  if(!list_empty(&sleeping_thread_list))
+  if(!list_empty(&sleeping_thread_list))                                                      /* If there are any sleeping threads.... */
   {
-    struct thread * t;
-    struct list_elem * temp_elem = list_front(&sleeping_thread_list);                                                            //Checks if list is empty
-  while (temp_elem != list_end(&sleeping_thread_list))   //Iterates through the list
-  {
-    t = list_entry(temp_elem,struct thread, elem);
-
-    if(ticks > t->wake_up_tick)                                                                         //Checks if thread is ready to wake up.
-    {      
-      temp_elem = list_remove(temp_elem);
+    struct thread * t = list_entry(list_front(&sleeping_thread_list) ,struct thread, elem);   /* Get thread from ordered list. */
+    while(ticks >= t->wake_up_tick)                                                           /* If a thread is ready to be woken up.... */
+    {
+      list_pop_front(&sleeping_thread_list);                                             /* Wake up the thread and pop it off the list. */
       thread_unblock(t);
-      break;   
-    }
-    else temp_elem = list_next(temp_elem);
-    
+      if(!list_empty(&sleeping_thread_list))                                             /* Repeat in case another thread wakes up on the same tick. */
+        t = list_entry(list_front(&sleeping_thread_list) ,struct thread, elem);
+      else break;
+    }    
   } 
-}
-///PROJECT 1 END///
+
+  ///PROJECT 1 END///
 
 }
 
