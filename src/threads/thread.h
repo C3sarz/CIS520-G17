@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -139,7 +140,7 @@ void thread_foreach (thread_action_func *, void *);
 ///PROJECT 1 START///
 
 /* Returns TRUE if thread A has a higher priority than Thread B */
-_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
+_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB);
 
 ///PROJECT 1 END///
 
