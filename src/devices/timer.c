@@ -102,7 +102,7 @@ timer_elapsed (int64_t then)
 ///PROJECT 1 START///
 
 /* Returns TRUE if thread A wakes up sooner than Thread B */
-bool smaller_wakeup_tick(struct list_elem * elemA, struct list_elem * elemB, void * n)
+_Bool smaller_wakeup_tick(const struct list_elem * elemA, const struct list_elem * elemB)
 {
  struct thread * threadA = list_entry(elemA ,struct thread, elem);
  struct thread * threadB = list_entry(elemB ,struct thread, elem);

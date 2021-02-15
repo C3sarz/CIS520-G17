@@ -93,7 +93,7 @@ struct thread
     ///PROJECT 1 START///
 
     int64_t wake_up_tick;               /* Tick on which the thread should be unblocked by the timer. */
-    
+
     ///PROJECT 1 END///
 
     /* Shared between thread.c and synch.c. */
@@ -135,6 +135,13 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
+
+///PROJECT 1 START///
+
+/* Returns TRUE if thread A has a higher priority than Thread B */
+_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
+
+///PROJECT 1 END///
 
 int thread_get_priority (void);
 void thread_set_priority (int);

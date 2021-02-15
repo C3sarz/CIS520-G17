@@ -331,12 +331,32 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+///PROJECT 1 START///
+
+/* Returns TRUE if thread A has a higher priority than Thread B */
+_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
+{
+ struct thread * threadA = list_entry(elemA ,struct thread, elem);
+ struct thread * threadB = list_entry(elemB ,struct thread, elem);
+
+ return threadA->priority > threadB->priority;
+}
+
+///PROJECT 1 END///
+
+///PROJECT 1 START///
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+
+  ///PROJECT 1 END///
+
 }
+
+///PROJECT 1 END///
 
 /* Returns the current thread's priority. */
 int
