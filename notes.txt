@@ -11,3 +11,6 @@
 
 -thread.h:
 	-added wake up property
+
+-thread.c
+	-finished set_thread_priority to yield if its priority is not greatest

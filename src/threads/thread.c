@@ -352,6 +352,8 @@ thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
 
+  struct thread * head = list_begin(&ready_list);
+  if (head->priority >= new_priority) { thread_yield(); }
   ///PROJECT 1 END///
 
 }
