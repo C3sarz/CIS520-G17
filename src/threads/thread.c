@@ -358,13 +358,8 @@ thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
 
-
-  if(list_entry(list_front(&ready_list), struct thread, elem)->priority < new_priority)
-  {
-    list_sort(&ready_list, &highest_priority_first, NULL);
-    thread_yield();
-  }
-
+  struct thread * head = list_entry(list_front(&ready_list), struct thread, elem);
+  if (head->priority >= new_priority) { thread_yield(); }
   ///PROJECT 1 END///
 
 }

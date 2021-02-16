@@ -10,10 +10,12 @@
 	-smaller sleep time comparator function (smaller_wakeup_tick)
 
 
--thread.h:
+-timer.h:
 	-function prototypes
+
+-thread.c
+	-finished set_thread_priority to yield if its priority is not greatest
 
 -thread.h:
 	-added wake up property
 	-function prototypes
-	-
