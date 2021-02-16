@@ -9,5 +9,11 @@
 	-modified timer_sleep() function
 	-smaller sleep time comparator function (smaller_wakeup_tick)
 
+
+-thread.h:
+	-function prototypes
+
 -thread.h:
 	-added wake up property
+	-function prototypes
+	-

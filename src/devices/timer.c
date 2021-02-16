@@ -222,13 +222,13 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
   if(!list_empty(&sleeping_thread_list))                                                      /* If there are any sleeping threads.... */
   {
-    struct thread * t = list_entry(list_front(&sleeping_thread_list) ,struct thread, elem);   /* Get thread from ordered list. */
+    struct thread * t = list_entry(list_front(&sleeping_thread_list), struct thread, elem);   /* Get thread from ordered list. */
     while(ticks >= t->wake_up_tick)                                                           /* If a thread is ready to be woken up.... */
     {
       list_pop_front(&sleeping_thread_list);                                             /* Wake up the thread and pop it off the list. */
       thread_unblock(t);
       if(!list_empty(&sleeping_thread_list))                                             /* Repeat in case another thread wakes up on the same tick. */
-        t = list_entry(list_front(&sleeping_thread_list) ,struct thread, elem);
+        t = list_entry(list_front(&sleeping_thread_list), struct thread, elem);
       else break;
     }    
   } 
