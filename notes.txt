@@ -15,6 +15,8 @@
 
 -thread.c
 	-finished set_thread_priority to yield if its priority is not greatest
+	-highest_priority_first() comparator function
+	-thread_yield() testing
 
 -thread.h:
 	-added wake up property

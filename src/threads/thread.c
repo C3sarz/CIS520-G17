@@ -240,7 +240,7 @@ thread_unblock (struct thread *t)
 
   ///PROJECT 1 START///
 
-  list_insert_ordered(&ready_list, &t->elem, &highest_priority_first, NULL);
+  list_insert_ordered(&ready_list, &t->elem, &highest_priority_first, NULL);           /* Adds the thread to the ready queue, which is now ordered by priority. */
 
   ///PROJECT 1 END///
 
@@ -313,8 +313,14 @@ thread_yield (void)
   ASSERT (!intr_context ());
 
   old_level = intr_disable ();
+
+  /// PROJECT 1 START ///
+
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    list_insert_ordered(&ready_list, &cur->elem, &highest_priority_first, NULL);          /* Adds the thread to the ready queue, which is now ordered by priority. */
+
+  /// PROJECT 1 END ///
+
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -358,8 +364,11 @@ thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
 
-  struct thread * head = list_entry(list_front(&ready_list), struct thread, elem);
-  if (head->priority >= new_priority) { thread_yield(); }
+  struct thread * temp = list_entry(list_front(&ready_list), struct thread, elem);
+  // list_remove(&thread_current ()->elem);
+  // list_insert_ordered(&ready_list, &thread_current ()->elem, &highest_priority_first, NULL);
+  list_sort (&ready_list, &highest_priority_first, NULL);
+   if (temp->priority > new_priority) { thread_yield(); }
   ///PROJECT 1 END///
 
 }
