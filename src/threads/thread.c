@@ -370,13 +370,15 @@ thread_set_priority (int new_priority)
   //printf("Changing priority: readyFront:%d old:%d new:%d\n", readyFront->priority, thread_get_priority(), new_priority);
 
   thread_current ()->priority = new_priority;
-
-  if (readyFront->priority > new_priority)
+  if(readyFront != NULL)
   {
-    //("YIELD\n");
-    thread_yield();
-  }
 
+  	 if (readyFront->priority > new_priority)
+   	{
+    		//("YIELD\n");
+    		thread_yield();
+   	}
+  }
   ///PROJECT 1 END///
 }
 
