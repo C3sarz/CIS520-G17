@@ -16,7 +16,7 @@
 -thread.c
 	-finished set_thread_priority to yield if its priority is not greatest
 	-highest_priority_first() comparator function
-	-thread_yield() testing
+	-thread_yield(): modified it to use the list_insert_ordered() function
 
 -thread.h:
 	-added wake up property

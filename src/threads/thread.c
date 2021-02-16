@@ -364,11 +364,9 @@ thread_set_priority (int new_priority)
 {
   thread_current ()->priority = new_priority;
 
-  struct thread * temp = list_entry(list_front(&ready_list), struct thread, elem);
-  // list_remove(&thread_current ()->elem);
-  // list_insert_ordered(&ready_list, &thread_current ()->elem, &highest_priority_first, NULL);
-  list_sort (&ready_list, &highest_priority_first, NULL);
-   if (temp->priority > new_priority) { thread_yield(); }
+  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
+  if (readyFront->priority > new_priority)
+    thread_yield(); 
   ///PROJECT 1 END///
 
 }
