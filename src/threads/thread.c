@@ -201,6 +201,10 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
+    if (priority > thread_get_priority ())
+    thread_yield ();
+
+
   return tid;
 }
 
@@ -362,13 +366,18 @@ _Bool highest_priority_first(const struct list_elem * elemA, const struct list_e
 void
 thread_set_priority (int new_priority) 
 {
+  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
+  //printf("Changing priority: readyFront:%d old:%d new:%d\n", readyFront->priority, thread_get_priority(), new_priority);
+
   thread_current ()->priority = new_priority;
 
-  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
   if (readyFront->priority > new_priority)
-    thread_yield(); 
-  ///PROJECT 1 END///
+  {
+    //("YIELD\n");
+    thread_yield();
+  }
 
+  ///PROJECT 1 END///
 }
 
 ///PROJECT 1 END///
