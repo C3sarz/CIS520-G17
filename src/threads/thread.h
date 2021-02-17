@@ -31,7 +31,7 @@ typedef int tid_t;
    thread structure itself sits at the very bottom of the page
    (at offset 0).  The rest of the page is reserved for the
    thread's kernel stack, which grows downward from the top of
-   the page (at offset 4 kB).  Here's an illustration:
+   the page (at offset 4 kB ).  Here's an illustration:
 
         4 kB +---------------------------------+
              |          kernel stack           |
@@ -94,6 +94,8 @@ struct thread
     ///PROJECT 1 START///
 
     int64_t wake_up_tick;               /* Tick on which the thread should be unblocked by the timer. */
+    int original_priority;              /* Keeps track of the priority before donation */
+    bool priority_is_donated;           /* Flag to determine if priority was donated by another thread */
 
     ///PROJECT 1 END///
 
