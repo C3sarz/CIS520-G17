@@ -29,6 +29,7 @@ bool lock_held_by_current_thread (const struct lock *);
 	-finished set_thread_priority to yield if its priority is not greatest
 	-highest_priority_first() comparator function
 	-thread_yield(): modified it to use the list_insert_ordered() function
+	-to do list_ordered orders the ready_list for set_thread_priority
 
 -thread.h:
 	-added wake up property

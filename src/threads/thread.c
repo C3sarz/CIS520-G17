@@ -4,6 +4,8 @@
 #include <random.h>
 #include <stdio.h>
 #include <string.h>
+#include <list.h>//project 1 addition
+#include <stdbool.h>//project 1 addition
 #include "threads/flags.h"
 #include "threads/interrupt.h"
 #include "threads/intr-stubs.h"
@@ -364,19 +366,45 @@ _Bool highest_priority_first(const struct list_elem * elemA, const struct list_e
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
-thread_set_priority (int new_priority) 
+thread_set_priority (int new_priority)
 {
-  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
-  thread_current ()->priority = new_priority;
-
-  if(!list_empty(&ready_list))
+  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);//take out a thread from the ready list (a list of all the threads)
+  thread_current ()->priority = new_priority;//set the current thread's priority to new priority
+  if(readyFront != NULL)//thread null check
   {
-  	if (readyFront->priority > new_priority)
-    	thread_yield();
+        //list_order(&ready_list);//added list ordering function as of 2.17.2021 4:16pm it runs with 18 failed tests
+        if (readyFront->priority > new_priority)//if the current thread no longer has the highest priority, then yield
+        {
+                thread_yield();
+        }
   }
-  ///PROJECT 1 END///
 }
 
+///PROJECT 1 END///
+
+///PROJECT 1 START///
+
+/*order the ready list acording to the entries priorities*/
+void list_order(struct list *list)
+{
+        //is the list empty?
+        if(!list_empty(list) && (list_size(list) > 1))//if it's not empty and more then 1 elem, sort the list:
+        {
+                struct thread * temp = list_pop_front(list);//pop the first element off the list
+                struct thread * second = list_pop_front(list);//pop the second element off the list
+                if(highest_priority_first(second,temp))//if a and b are out of order, then reorder the list by inserting into a new list and then seting ready_list to the new list.
+                {
+                        struct list a;//make a new list
+                        list_init(&a);//initialize the new list
+                        list_insert_ordered(&a, second,1,NULL);//"base case" insert second and temp
+                        while(!list_empty(list))
+                        {
+                                list_insert_ordered(&a,list_pop_front(list),1,NULL);//pop off an element, and insert it into the new list
+                        }
+                        ready_list = a;//switch with ready_list
+                }
+        }
+}
 ///PROJECT 1 END///
 
 /* Returns the current thread's priority. */
