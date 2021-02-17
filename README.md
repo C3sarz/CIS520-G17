@@ -2,6 +2,7 @@
 # Project 1
 ## CIS 520 - Operating Systems 1 -  Group 17
 ----------------------------------------------------------------
+[Notes and modified files](https://github.com/C3sarz/CIS520-G17/blob/master/notes.txt)
 
 TODO List:
 1. Timer_sleep():
