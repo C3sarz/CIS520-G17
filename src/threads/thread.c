@@ -370,13 +370,12 @@ thread_set_priority (int new_priority)
 {
   struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);//take out a thread from the ready list (a list of all the threads)
   thread_current ()->priority = new_priority;//set the current thread's priority to new priority
-  if(readyFront != NULL)//thread null check
+
+  //list_order(&ready_list);//added list ordering function 
+  if(!list_empty(&ready_list))
   {
-        //list_order(&ready_list);//added list ordering function as of 2.17.2021 4:16pm it runs with 18 failed tests
-        if (readyFront->priority > new_priority)//if the current thread no longer has the highest priority, then yield
-        {
-                thread_yield();
-        }
+  	if (readyFront->priority > new_priority)
+    	thread_yield();
   }
 }
 
@@ -407,12 +406,36 @@ void list_order(struct list *list)
 }
 ///PROJECT 1 END///
 
-/* Returns the current thread's priority. */
+///PROJECT 1 START///
+
+/* Returns the current thread's priority. 
+###this can probably be adjusted to run through a queue of threads that need to go on the processor###*/
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+  if(thread_current ()->priority_is_donated)//test for priority presence (instructions say: "In the presence of priority donation,...")
+  {
+	//return the highest #donated# thread priority:
+	struct list_elem *e;//used for iteration per the list.h documentation
+	int highest =0;
+	int test = 0;
+	for(e = list_begin (&ready_list); e != list_end (&ready_list);
+           e = list_next (e))//iterate through  the threads and pull out the highest priority.
+	{struct thread * temp = list_entry (e, struct thread, elem);//taken from the thread.h documentation
+		test = temp->priority;
+		if(test>highest)
+		{
+			highest = test;
+		}
+	}
+	return highest;//#should be taken out in the final version#
+  }else
+  {
+  	return thread_current ()->priority;//return current threads priority
+  }
 }
+
+///PROJECT 1 END///
 
 /* Sets the current thread's nice value to NICE. */
 void

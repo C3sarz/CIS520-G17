@@ -3,6 +3,10 @@
 	   Group 17
 ==============================
 
+==== testing ========
+pintos -v -k -T 60 -- -q run alarm-single //this will run a single test (in this case "alarm-single"
+====================
+
 ==== Observations ====
 
 possibly relevant functions for priority donation:
