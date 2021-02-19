@@ -68,8 +68,14 @@ sema_down (struct semaphore *sema)
   old_level = intr_disable ();
   while (sema->value == 0) 
     {
-      list_push_back (&sema->waiters, &thread_current ()->elem);
+
+      ///PROJECT 1 START///
+
+      list_insert_ordered(&sema->waiters, &thread_current ()->elem, &highest_priority_first, NULL);
       thread_block ();
+
+      ///PROJECT 1 END///
+
     }
   sema->value--;
   intr_set_level (old_level);
@@ -198,14 +204,10 @@ lock_acquire (struct lock *lock)
 
   ///PROJECT 1 START///
 
-  int current_thread_priority = thread_get_priority();
-
   if(lock->holder != NULL &&
-    lock->holder->priority < current_thread_priority)
+    lock->holder->priority < thread_get_priority())
   {
-    //insert some sort of thread lock here or inside function
-    thread_donate_priority(lock->holder, current_thread_priority);
-    //sort list and thread yielding maybe?
+    thread_donate_priority(lock->holder, thread_get_priority());
   }
 
   ///PROJECT 1 END///
@@ -263,12 +265,13 @@ lock_release (struct lock *lock)
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
-  // /PROJECT 1 START///
+  ///PROJECT 1 START///
   
   if(thread_current()->priority_is_donated)
     thread_restore_priority();
 
-  // /PROJECT 1 END///
+  ///PROJECT 1 END///
+  
 }
 
 /* Returns true if the current thread holds LOCK, false

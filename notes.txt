@@ -46,5 +46,6 @@ bool lock_held_by_current_thread (const struct lock *);
 	-modified lock_acquire()
 	-lock_try_acquire()
 	-lock_release()
+	-midified sema_down()
 
 -synch.h:

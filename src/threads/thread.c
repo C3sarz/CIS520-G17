@@ -450,15 +450,6 @@ thread_restore_priority(void)
   struct thread * t = thread_current();
   //lock here
   t->priority_is_donated = false;
-  if(!list_empty(&ready_list))
-  {
-    list_sort (&ready_list, &highest_priority_first, NULL);
-    struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
-    printf(" Running: %s readyFront: %s, priority: %d\n", thread_current()->name, readyFront->name, readyFront->priority);
-  }
-  else printf("Running: %s readyFront: EMPTY\n", thread_current()->name);
-  //else printf(" readyFront empty\n");
-
   thread_set_priority(t->original_priority);
   //end lock
 }
