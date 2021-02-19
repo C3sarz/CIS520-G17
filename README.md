@@ -16,7 +16,8 @@ TODO List:
 
 2. Priority Scheluder
 
-- Need priority donation system!!
+- Priority donation srews up ready queue order.
+- list_ordered orders the ready_list for set_thread_priority 
 
 	Tests:
 	- pass tests/threads/alarm-priority

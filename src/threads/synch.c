@@ -196,6 +196,20 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  ///PROJECT 1 START///
+
+  int current_thread_priority = thread_get_priority();
+
+  if(lock->holder != NULL &&
+    lock->holder->priority < current_thread_priority)
+  {
+    //insert some sort of thread lock here or inside function
+    thread_donate_priority(lock->holder, current_thread_priority);
+    //sort list and thread yielding maybe?
+  }
+
+  ///PROJECT 1 END///
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -214,9 +228,24 @@ lock_try_acquire (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (!lock_held_by_current_thread (lock));
 
+  ///PROJECT 1 START///
+
+  int current_thread_priority = thread_get_priority();
+
+  if(lock->holder != NULL &&
+    lock->holder->priority < current_thread_priority)
+  {
+    //insert some sort of thread lock here or inside function
+    thread_donate_priority(lock->holder, current_thread_priority);
+    //sort list and thread yielding maybe?
+  }
+
+  ///PROJECT 1 END///
+
   success = sema_try_down (&lock->semaphore);
   if (success)
     lock->holder = thread_current ();
+
   return success;
 }
 
@@ -233,6 +262,13 @@ lock_release (struct lock *lock)
 
   lock->holder = NULL;
   sema_up (&lock->semaphore);
+
+  // /PROJECT 1 START///
+  
+  if(thread_current()->priority_is_donated)
+    thread_restore_priority();
+
+  // /PROJECT 1 END///
 }
 
 /* Returns true if the current thread holds LOCK, false

@@ -352,7 +352,8 @@ thread_foreach (thread_action_func *func, void *aux)
 ///PROJECT 1 START///
 
 /* Returns TRUE if thread A has a higher priority than Thread B */
-_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
+_Bool 
+highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
 {
  struct thread * threadA = list_entry(elemA ,struct thread, elem);
  struct thread * threadB = list_entry(elemB ,struct thread, elem);
@@ -365,70 +366,103 @@ _Bool highest_priority_first(const struct list_elem * elemA, const struct list_e
 void
 thread_set_priority (int new_priority)
 {
-  struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);//take out a thread from the ready list (a list of all the threads)
-  thread_current ()->priority = new_priority;//set the current thread's priority to new priority
+  thread_current ()->priority = new_priority;                                                 /* Sets the current thread's priority to NEW_PRIORITY. */
 
-  //list_order(&ready_list);//added list ordering function 
-  if(!list_empty(&ready_list))
+  if(!list_empty(&ready_list))                                                                /* If the ready queue is empty */
   {
-  	if (readyFront->priority > new_priority)
+    list_sort (&ready_list, &highest_priority_first, NULL);
+    struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);    /* Get thread at the front of the ready queue (HIGHEST priority) */
+  	if (readyFront->priority > new_priority)                                                  /* Yield to the front of the ready queue. */
     	thread_yield();
   }
 }
 
-/*order the ready list acording to the entries priorities*/
-void list_order(struct list *list)
-{
-  //is the list empty?
-  if(!list_empty(list) && (list_size(list) > 1))//if it's not empty and more then 1 elem, sort the list:
-  {
-    struct thread * temp = list_pop_front(list);//pop the first element off the list
-    struct thread * second = list_pop_front(list);//pop the second element off the list
-    if(highest_priority_first(second,temp))//if a and b are out of order, then reorder the list by inserting into a new list and then seting ready_list to the new list.
-    {
-      struct list a;//make a new list
-      list_init(&a);//initialize the new list
-      list_insert_ordered(&a, second,1,NULL);//"base case" insert second and temp
-      while(!list_empty(list))
-        {
-          list_insert_ordered(&a,list_pop_front(list),1,NULL);//pop off an element, and insert it into the new list
-        }
-      ready_list = a;//switch with ready_list
-    }
-  }
-}
-///PROJECT 1 END///
-
-///PROJECT 1 START///
+// /*order the ready list acording to the entries priorities*/
+// void list_order(struct list *list)
+// {
+//   //is the list empty?
+//   if(!list_empty(list) && (list_size(list) > 1))//if it's not empty and more then 1 elem, sort the list:
+//   {
+//     struct thread * temp = list_pop_front(list);//pop the first element off the list
+//     struct thread * second = list_pop_front(list);//pop the second element off the list
+//     if(highest_priority_first(second,temp))//if a and b are out of order, then reorder the list by inserting into a new list and then seting ready_list to the new list.
+//     {
+//       struct list a;//make a new list
+//       list_init(&a);//initialize the new list
+//       list_insert_ordered(&a, second,1,NULL);//"base case" insert second and temp
+//       while(!list_empty(list))
+//         {
+//           list_insert_ordered(&a,list_pop_front(list),1,NULL);//pop off an element, and insert it into the new list
+//         }
+//       ready_list = a;//switch with ready_list
+//     }
+//   }
+// }
 
 /* Returns the current thread's priority. 
 ###this can probably be adjusted to run through a queue of threads that need to go on the processor###*/
 int
 thread_get_priority (void) 
 {
-  if(thread_current ()->priority_is_donated)//test for priority presence (instructions say: "In the presence of priority donation,...")
-  {
-	  //return the highest #donated# thread priority:
-	  struct list_elem *e;//used for iteration per the list.h documentation
-	  int highest =0;
-	  int test = 0;
-	  for(e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))//iterate through  the threads and pull out the highest priority.
-	  {
-      struct thread * temp = list_entry (e, struct thread, elem);//taken from the thread.h documentation
-	    test = temp->priority;
-	    if(test>highest)
-	    {
-		    highest = test;
-	    }
-	  }
-	  return highest;//#should be taken out in the final version#
-  }
+  return thread_current()->priority;
+//   if(thread_current ()->priority_is_donated)//test for priority presence (instructions say: "In the presence of priority donation,...")
+//   {
+// 	  //return the highest #donated# thread priority:
+// 	  struct list_elem *e;//used for iteration per the list.h documentation
+// 	  int highest =0;
+// 	  int test = 0;
+// 	  for(e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))//iterate through  the threads and pull out the highest priority.
+// 	  {
+//       struct thread * temp = list_entry (e, struct thread, elem);//taken from the thread.h documentation
+// 	    test = temp->priority;
+// 	    if(test>highest)
+// 	    {
+// 		    highest = test;
+// 	    }
+// 	  }
+// 	  return highest;//#should be taken out in the final version#
+//   }
 
-  else
-  {
-  	return thread_current ()->priority;//return current threads priority
-  }
+//   else
+//   {
+//   	return thread_current ()->priority;//return current threads priority
+//   }
 }
+
+/* Donates current thread MAX priority to the passed thread t.*/
+void 
+thread_donate_priority(struct thread * t, int donated_priority)
+{
+  //lock here
+  t->original_priority = t->priority;
+  t->priority_is_donated = true;
+  t->priority = donated_priority;
+  list_sort (&ready_list, &highest_priority_first, NULL);
+
+
+  //end lock
+}
+
+/* Restores current thread's donated priority to the original one before donation.*/
+void 
+thread_restore_priority(void)
+{
+  struct thread * t = thread_current();
+  //lock here
+  t->priority_is_donated = false;
+  if(!list_empty(&ready_list))
+  {
+    list_sort (&ready_list, &highest_priority_first, NULL);
+    struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);
+    printf(" Running: %s readyFront: %s, priority: %d\n", thread_current()->name, readyFront->name, readyFront->priority);
+  }
+  else printf("Running: %s readyFront: EMPTY\n", thread_current()->name);
+  //else printf(" readyFront empty\n");
+
+  thread_set_priority(t->original_priority);
+  //end lock
+}
+
 
 ///PROJECT 1 END///
 

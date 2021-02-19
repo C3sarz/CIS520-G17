@@ -143,11 +143,16 @@ void thread_foreach (thread_action_func *, void *);
 
 /* Returns TRUE if thread A has a higher priority than Thread B */
 _Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB);
-void list_order (struct list *);
-///PROJECT 1 END///
+//void list_order (struct list *);
 
-int thread_get_priority (void);
+
 void thread_set_priority (int);
+int thread_get_priority (void);
+
+void thread_donate_priority(struct thread * t, int donated_priority);
+void thread_restore_priority(void);
+
+///PROJECT 1 END///
 
 int thread_get_nice (void);
 void thread_set_nice (int);
