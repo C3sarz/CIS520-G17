@@ -22,13 +22,13 @@ TODO List:
 	Tests:
 	- pass tests/threads/alarm-priority
 	- pass tests/threads/priority-change
-	- FAIL tests/threads/priority-donate-one
+	- FAIL tests/threads/priority-donate-one		~order is correct but fails due to whitespace (???)
 	- FAIL tests/threads/priority-donate-multiple
 	- FAIL tests/threads/priority-donate-multiple2
 	- FAIL tests/threads/priority-donate-nest
 	- FAIL tests/threads/priority-donate-sema
 	- FAIL tests/threads/priority-donate-lower
-	- FAIL tests/threads/priority-fifo
+	- pass tests/threads/priority-fifo
 	- pass tests/threads/priority-preempt
 	- FAIL tests/threads/priority-sema
 	- FAIL tests/threads/priority-condvar
