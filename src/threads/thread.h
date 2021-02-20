@@ -96,6 +96,7 @@ struct thread
     int64_t wake_up_tick;               /* Tick on which the thread should be unblocked by the timer. */
     int original_priority;              /* Keeps track of the priority before donation */
     bool priority_is_donated;           /* Flag to determine if priority was donated by another thread */
+    struct list priority_donors;   /* Keeps track of priority donors and the donated priority.
 
     ///PROJECT 1 END///
 
@@ -149,8 +150,8 @@ _Bool highest_priority_first(const struct list_elem * elemA, const struct list_e
 void thread_set_priority (int);
 int thread_get_priority (void);
 
-void thread_donate_priority(struct thread * t, int donated_priority);
-void thread_restore_priority(void);
+void thread_donate_priority(struct thread * t);
+void thread_restore_priority(struct thread * donor);
 
 ///PROJECT 1 END///
 

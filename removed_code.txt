@@ -1,0 +1,58 @@
+/--------------------------------------------------/
+GRANT
+/--------------------------------------------------/
+
+thread.c:
+
+/* Returns the current thread's priority. 
+###this can probably be adjusted to run through a queue of threads that need to go on the processor###*/
+int
+thread_get_priority (void) 
+{
+  if(thread_current ()->priority_is_donated)//test for priority presence (instructions say: "In the presence of priority donation,...")
+  {
+	  //return the highest #donated# thread priority:
+	  struct list_elem *e;//used for iteration per the list.h documentation
+	  int highest =0;
+	  int test = 0;
+	  for(e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))//iterate through  the threads and pull out the highest priority.
+	  {
+      struct thread * temp = list_entry (e, struct thread, elem);//taken from the thread.h documentation
+	    test = temp->priority;
+	    if(test>highest)
+	    {
+		    highest = test;
+	    }
+	  }
+	  return highest;//#should be taken out in the final version#
+  }
+
+  else
+  {
+  	return thread_current ()->priority;//return current threads priority
+  }
+}
+
+// /*order the ready list acording to the entries priorities*/
+// void list_order(struct list *list)
+// {
+//   //is the list empty?
+//   if(!list_empty(list) && (list_size(list) > 1))//if it's not empty and more then 1 elem, sort the list:
+//   {
+//     struct thread * temp = list_pop_front(list);//pop the first element off the list
+//     struct thread * second = list_pop_front(list);//pop the second element off the list
+//     if(highest_priority_first(second,temp))//if a and b are out of order, then reorder the list by inserting into a new list and then seting ready_list to the new list.
+//     {
+//       struct list a;//make a new list
+//       list_init(&a);//initialize the new list
+//       list_insert_ordered(&a, second,1,NULL);//"base case" insert second and temp
+//       while(!list_empty(list))
+//         {
+//           list_insert_ordered(&a,list_pop_front(list),1,NULL);//pop off an element, and insert it into the new list
+//         }
+//       ready_list = a;//switch with ready_list
+//     }
+//   }
+// }
+
+
