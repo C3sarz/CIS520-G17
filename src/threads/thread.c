@@ -4,8 +4,6 @@
 #include <random.h>
 #include <stdio.h>
 #include <string.h>
-#include <list.h>//project 1 addition
-#include <stdbool.h>//project 1 addition
 #include "threads/flags.h"
 #include "threads/interrupt.h"
 #include "threads/intr-stubs.h"
@@ -205,7 +203,12 @@ thread_create (const char *name, int priority,
 
   ///PROJECT 1 START///
 
-  list_init(&thread_current()->priority_donors);
+  t->donors_amount = 0;                     /* Inititalize donor list */
+  int i;
+  for(i = 0; i < 10; i++)                   /* Inititalize donor list */
+  {
+    t->priority_donors[i] = NULL;
+  }
 
   if (priority > thread_get_priority ())
     thread_yield ();
@@ -402,43 +405,62 @@ thread_get_priority (void)
 
 /* Donates current thread MAX priority to the passed thread t.*/
 void 
-thread_donate_priority(struct thread * t)
+thread_donate_priority(struct thread * receptor, struct lock * lock)
 {
-  struct thread * curr = thread_current();
-  if(!curr->priority_is_donated)
-    t->original_priority = t->priority;
+  if(!receptor->priority_is_donated)
+    receptor->original_priority = receptor->priority;
 
-  list_insert_ordered(&t->priority_donors, &curr->elem, &highest_priority_first, NULL);
-  t->priority_is_donated = true;
+  if(receptor->donors_amount < 10)
+  {
+    receptor->priority_donors[receptor->donors_amount] = lock;
+    receptor->donated_priorities[receptor->donors_amount] = thread_get_priority();
+    receptor->donors_amount++;
+  }
 
-  if(t->priority < thread_get_priority())
-    t->priority = thread_get_priority();
+  receptor->priority_is_donated = true;
+  receptor->priority = thread_get_priority();
   list_sort (&ready_list, &highest_priority_first, NULL);
 }
 
 /* Restores current thread's donated priority to the original one before donation.*/
 void 
-thread_restore_priority(struct thread * donor)
+thread_restore_priority(struct lock * lock)
 {
   struct thread * curr = thread_current();
-  ASSERT(&curr->priority_donors != NULL);
-  ASSERT(!list_empty(&curr->priority_donors));
-  ///////////////////////////////////////////////
-  //LIST IS NOT WORKING FOR SOME REASON
-  //////////////////////////////////////////////
-  
-  //list_remove(&donor->elem); //CRASH                          /* Removes priority from the donor list */
 
-  if(list_empty(&curr->priority_donors))                            /* If no more donors... */
+  if(curr->donors_amount == 1)
   {
+    curr->donors_amount--;
     curr->priority_is_donated = false;                                /* Resets donation flag. */
-    thread_set_priority(curr->original_priority);                     /* Restores original priority. */
+    thread_set_priority(curr->original_priority); 
   }
+
+  else if(curr->donors_amount <= 0)                            /* If no more donors... */
+  {
+    ASSERT(false);  //crash
+  }
+
   else
   {
-    thread_set_priority(thread_get_priority());               /* Returns the highest priority from the donor list. */
+    int i;
+    bool itemRemoved = false;
+    for(i = 0; i<curr->donors_amount; i++)
+    {
+      if(curr->priority_donors[i] == lock)
+        itemRemoved == true;
+
+      if(itemRemoved)
+      {
+        curr->priority_donors[i] = curr->priority_donors[i+1];
+        curr->donated_priorities[i] = curr->donated_priorities[i+1];
+      }
+    }
+    curr->donors_amount--;
+
   }
 }
+
+
 
 ///PROJECT 1 END///
 

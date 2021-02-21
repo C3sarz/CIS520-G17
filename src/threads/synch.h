@@ -25,7 +25,7 @@ struct lock
 
     ///PROJECT 1 START///
 
-    struct thread * donor;      /* Priority donor */
+    
 
     ///PROJECT 1 END///
   };

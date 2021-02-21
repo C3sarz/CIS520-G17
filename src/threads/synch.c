@@ -206,8 +206,7 @@ lock_acquire (struct lock *lock)
   if(lock->holder != NULL &&
     lock->holder->priority < thread_get_priority())
   {
-    lock->donor = thread_current();
-    thread_donate_priority(lock->holder);
+    thread_donate_priority(lock->holder, lock);
     
   }
 
@@ -256,8 +255,7 @@ lock_release (struct lock *lock)
   
   if(thread_current()->priority_is_donated)
   {
-    thread_restore_priority(lock->donor);
-    lock->donor = NULL;
+    thread_restore_priority(lock);
   }
 
 
