@@ -97,7 +97,7 @@ struct thread
     int original_priority;                 /* Keeps track of the priority before donation */
     bool priority_is_donated;              /* Flag to determine if priority was donated by another thread */
     struct lock * priority_donors[10];   /* Keeps track of priority donors and the donated priority. */
-    int donated_priorities[10];
+    int donated_priorities[10];		   /*helps keep track of priority levels.*/
     int donors_amount;                     /* Used with the arrays to keep track of donors. */
 
     ///PROJECT 1 END///
@@ -149,11 +149,11 @@ _Bool highest_priority_first(const struct list_elem * elemA, const struct list_e
 //void list_order (struct list *);
 
 
-void thread_set_priority (int);
-int thread_get_priority (void);
+void thread_set_priority (int);//did not modify the def, just the "guts"
+int thread_get_priority (void);//did not modify the def, just the "guts"
 
-void thread_donate_priority(struct thread * receptor, struct lock * lock);
-void thread_restore_priority(struct lock * lock);
+void thread_donate_priority(struct thread * receptor, struct lock * lock);//added to the project
+void thread_restore_priority(struct lock * lock);//added to the project
 
 ///PROJECT 1 END///
 
