@@ -405,6 +405,7 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
     {
       printf("Thread_donated_to[%d]\n", inc);
       curr->threads_donated_to[inc] = &receptor;
+      inc = 9;
     }
     inc++;
   }
@@ -432,6 +433,7 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
       {
         printf("Donated priority here\n");
         thread_donate_priority(receptor->threads_donated_to[inc2], lock);
+        break;
       }
     }
 
