@@ -9,9 +9,8 @@ pintos -v -k -T 60 -- -q run alarm-single //this will run a single test (in this
 
 ==== Observations ====
 
--the mishandling of multiple donation causes main's PRI to count as "not donated" after releasing the main lock 
--must find a way to know which priority should be removed on restoration!!!
--must move all donation logic to synch
+-a LOT of commenting is required.
+-modified files section might need updating!
 
 ==== Modified files ====
 
@@ -47,5 +46,4 @@ pintos -v -k -T 60 -- -q run alarm-single //this will run a single test (in this
 	-midified sema_down()
 
 -synch.h:
--added lock properties
 

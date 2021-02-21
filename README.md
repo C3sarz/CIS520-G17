@@ -16,15 +16,12 @@ TODO List:
 
 2. Priority Scheluder
 
-- Priority donation srews up ready queue order.
-- list_ordered orders the ready_list for set_thread_priority 
-
 	Tests:
 	- pass tests/threads/alarm-priority
 	- pass tests/threads/priority-change
-	- FAIL tests/threads/priority-donate-one		~order is correct but fails due to whitespace (???)
-	- FAIL tests/threads/priority-donate-multiple
-	- FAIL tests/threads/priority-donate-multiple2
+	- pass tests/threads/priority-donate-one		
+	- pass tests/threads/priority-donate-multiple
+	- pass tests/threads/priority-donate-multiple2
 	- FAIL tests/threads/priority-donate-nest
 	- FAIL tests/threads/priority-donate-sema
 	- FAIL tests/threads/priority-donate-lower
@@ -35,3 +32,5 @@ TODO List:
 	- FAIL tests/threads/priority-donate-chain
 
 3.  Advanced Scheduler
+
+- Not implemented.

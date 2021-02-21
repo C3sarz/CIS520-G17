@@ -391,17 +391,22 @@ thread_get_priority (void)
 {
   struct thread * curr = thread_current();
 
-  // if(!list_empty(&curr->priority_donors))
-  // {
-  //   struct thread * highest_priority_donor = list_entry(list_front(&curr->priority_donors), struct thread, elem);
-  //   printf("\n%s\n",highest_priority_donor->name);//crash
-  //   return highest_priority_donor->priority;//crash
-  // }
-
-
-  return curr->priority;
+  if(curr->priority_is_donated)
+  {
+    int i;
+    int max = 0;
+    for(i = 0; i < curr->donors_amount; i++)
+    {
+      if(curr->donated_priorities[i] > max)
+        max = curr->donated_priorities[i];
+    }
+    return max;
+  }
+  else
+    return curr->priority;
 
 }
+
 
 /* Donates current thread MAX priority to the passed thread t.*/
 void 
@@ -410,16 +415,45 @@ thread_donate_priority(struct thread * receptor, struct lock * lock)
   if(!receptor->priority_is_donated)
     receptor->original_priority = receptor->priority;
 
-  if(receptor->donors_amount < 10)
+  if(receptor->donors_amount < 9)
   {
-    receptor->priority_donors[receptor->donors_amount] = lock;
-    receptor->donated_priorities[receptor->donors_amount] = thread_get_priority();
     receptor->donors_amount++;
-  }
+    bool maxFound = false;
+    int current_priority = thread_get_priority();
+    struct lock * tempLock;
+    int tempPriority;
+    int i;
+    for(i = 0; i < receptor->donors_amount; i++)
+    {
+      if(maxFound)
+      {
+      struct lock * nextLock = receptor->priority_donors[i];
+      int nextPriority = receptor->donated_priorities[i];
 
-  receptor->priority_is_donated = true;
-  receptor->priority = thread_get_priority();
-  list_sort (&ready_list, &highest_priority_first, NULL);
+      receptor->priority_donors[i] = tempLock;
+      receptor->donated_priorities[i] = tempPriority;
+
+      tempLock = nextLock;
+      tempPriority = nextPriority;
+      }
+      
+      if(!maxFound &&
+        current_priority > receptor->donated_priorities[i])
+      {
+        maxFound = true;
+        tempLock = receptor->priority_donors[i];
+        tempPriority = receptor->donated_priorities[i];
+        receptor->priority_donors[i] = lock;
+        receptor->donated_priorities[i] = current_priority;
+      }
+      
+    }
+    
+
+    receptor->priority_is_donated = true;
+    receptor->priority = thread_get_priority();
+    list_sort (&ready_list, &highest_priority_first, NULL);
+  }
 }
 
 /* Restores current thread's donated priority to the original one before donation.*/
@@ -428,7 +462,8 @@ thread_restore_priority(struct lock * lock)
 {
   struct thread * curr = thread_current();
 
-  if(curr->donors_amount == 1)
+  if(curr->donors_amount == 1 &&
+		  curr->priority_donors[0] == lock)
   {
     curr->donors_amount--;
     curr->priority_is_donated = false;                                /* Resets donation flag. */
@@ -447,7 +482,7 @@ thread_restore_priority(struct lock * lock)
     for(i = 0; i<curr->donors_amount; i++)
     {
       if(curr->priority_donors[i] == lock)
-        itemRemoved == true;
+        itemRemoved = true;
 
       if(itemRemoved)
       {
@@ -455,8 +490,9 @@ thread_restore_priority(struct lock * lock)
         curr->donated_priorities[i] = curr->donated_priorities[i+1];
       }
     }
-    curr->donors_amount--;
-
+    if(itemRemoved)
+    	curr->donors_amount--;
+    thread_set_priority(thread_get_priority());
   }
 }
 

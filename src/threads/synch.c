@@ -207,7 +207,7 @@ lock_acquire (struct lock *lock)
     lock->holder->priority < thread_get_priority())
   {
     thread_donate_priority(lock->holder, lock);
-    
+    thread_yield();    
   }
 
   ///PROJECT 1 END///
@@ -248,14 +248,17 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
+
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
   ///PROJECT 1 START///
-  
-  if(thread_current()->priority_is_donated)
+
+  struct thread * curr = thread_current();
+  if(curr->priority_is_donated)
   {
     thread_restore_priority(lock);
+    thread_yield();
   }
 
 
