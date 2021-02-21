@@ -400,9 +400,10 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
   int inc = 0;
   while (inc < 9)
   {
-    printf("%d", inc);
+    printf("%d\n", inc);
     if (curr->threads_donated_to[inc] == NULL)
     {
+      printf("Thread_donated_to[%d]\n", inc);
       curr->threads_donated_to[inc] = &receptor;
     }
     inc++;
@@ -426,10 +427,10 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
 
     for (int inc2 = 0; inc2 < 9; inc2++)
     {
-      printf("%d", inc2);
+      printf("%d\n", inc2);
       if (receptor->threads_donated_to[inc2] != NULL)
       {
-        printf("Donated priority here");
+        printf("Donated priority here\n");
         thread_donate_priority(receptor->threads_donated_to[inc2], lock);
       }
     }
