@@ -6,8 +6,9 @@ CIS 520 - Programming Project #1
 
 >> Fill in the names and email addresses of your group members.
 
-FirstName LastName <email@k-state.edu>
-FirstName LastName <email@k-state.edu>
+Cesar Zavala Clerx <cesarz@ksu.edu>
+John Chapple <johnchapple@ksu.edu>
+Grant Clothier <Grantxc5@ksu.edu>
 ...
 
 ---- PRELIMINARIES ----
@@ -19,6 +20,8 @@ FirstName LastName <email@k-state.edu>
 >> preparing your submission, other than the Pintos documentation,
 >> course text, lecture notes, and course staff.
 
+GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforgeeks.org/time-delay-c.
+
 
                  ALARM CLOCK
                  ===========
@@ -28,6 +31,16 @@ FirstName LastName <email@k-state.edu>
 >> A1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
+
+---please reference the notes.txt document for full list of function modifications---
+
+-timer.c
+	-struct list sleeping_thread_list;
+		list to keep track of threads to be woken up by the timer
+-timer.h
+	-_Bool smaller_wakeup_tick(const struct list_elem * elemA, const struct list_elem * elemB);
+		returns true if thread a wakes up sooner than thread b
+
 
 
 ---- ALGORITHMS ----
