@@ -42,56 +42,38 @@ GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforg
 		returns true if thread A wakes up sooner than thread B
 -thread.c
 	-various functions were modified, no new or changed structs/members, global variables, typedef, or enumeration.
--thread.h
-	-int64_t wake_up_tick; 
-		Tick on which the thread should be unblocked by the timer.
-	-int original_priority;
-		Keeps track of the priority before donation
-	-bool priority_is_donated;
-		Flag to determine if priority was donated by another thread
-	-struct lock * priority_donors[10];
-		Keeps track of priority donors and the donated priority
-	-int donated_priorities[10];
-		helps keeps track of the priority levels
-	-int donors_amount;
-		Used with the arrays to keep track of donors.
-	-_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB);
-		returns true if thread A has higher priority than thread B
-	-void thread_donate_priority(struct thread * receptor, struct lock * lock);
-		donates current thread max priority to the passed thread t.
-	-void thread_restore_priority(struct lock * lock);
-		restore current threads donated priority to the original one before donation.
-
--synch.c
-	-modified various functions but did not change definitions. 
--synch.h
-	-no modifications yet.
 
 
 ---- ALGORITHMS ----
 
 >> A2: Briefly describe what happens in a call to your timer_sleep(),
 >> including the effects of the timer interrupt handler.
-
+	It pulls the current thread, pulls the current system ticks, saves the tick. 
+	Then it will turn off interrupts, add the current thread to the list of ordered threads, 
+	block sleeping threads and turn interrupts back on.
+	
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
-
+	The list is checked before iterating. The list is checked again before iterating the case 
+	for two timers waking up on the same tick.
 
 ---- SYNCHRONIZATION ----
 
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
-
+	The number of ticks is checked to make sure they are greater than 0.
 
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
+	Interrupts are turned off while a thread is added to the list.
 
 
 ---- RATIONALE ----
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> other designs that you considered?
-
+	It is relatively quick and easy to implement. I would say it is superior to our other 
+	designs because it works, and rather efficiently I might add.
 
 
              PRIORITY SCHEDULING
@@ -102,14 +84,42 @@ GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforg
 >> B1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
+-thread.c
+        -various functions were modified, no new or changed structs/members, global variables, typedef, or enumeration.
+-thread.h
+        -int64_t wake_up_tick;
+                Tick on which the thread should be unblocked by the timer.
+        -int original_priority;
+                Keeps track of the priority before donation
+        -bool priority_is_donated;
+                Flag to determine if priority was donated by another thread
+        -struct lock * priority_donors[10];
+                Keeps track of priority donors and the donated priority
+        -int donated_priorities[10];
+                helps keeps track of the priority levels
+        -int donors_amount;
+                Used with the arrays to keep track of donors.
+        -_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB);
+                returns true if thread A has higher priority than thread B
+        -void thread_donate_priority(struct thread * receptor, struct lock * lock);
+                donates current thread max priority to the passed thread t.
+        -void thread_restore_priority(struct lock * lock);
+                restore current threads donated priority to the original one before donation.
+
+-synch.c
+        -modified various functions but did not change definitions.
+-synch.h
+        -no modifications yet.
+
 
 >> B2: Explain the data structure used to track priority donation.
-
+	###explained above?####
 
 ---- ALGORITHMS ----
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
+	
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
