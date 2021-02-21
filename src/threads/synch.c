@@ -71,7 +71,7 @@ sema_down (struct semaphore *sema)
 
       ///PROJECT 1 START///
 
-      list_insert_ordered(&sema->waiters, &thread_current ()->elem, &highest_priority_first, NULL);
+      list_insert_ordered(&sema->waiters, &thread_current ()->elem, &highest_priority_first, NULL);     /* Order semaphore waiters by priority. */
       thread_block ();
 
       ///PROJECT 1 END///
@@ -203,10 +203,10 @@ lock_acquire (struct lock *lock)
 
   ///PROJECT 1 START///
 
-  if(lock->holder != NULL &&
+  if(lock->holder != NULL &&                              /* If lock is held by another lower priority thread... */
     lock->holder->priority < thread_get_priority())
   {
-    thread_donate_priority(lock->holder, lock);
+    thread_donate_priority(lock->holder, lock);             /* Donate priority and yield. */
     thread_yield();    
   }
 
@@ -248,19 +248,16 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
-
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
   ///PROJECT 1 START///
 
-  struct thread * curr = thread_current();
-  if(curr->priority_is_donated)
+  if(thread_current()->priority_is_donated)       /* If releasing a lock on a donated priority thread.... */
   {
-    thread_restore_priority(lock);
-    thread_yield();
+    thread_restore_priority(lock);                  /* If the lock belongs to this thread, revoke donation. */
+    thread_yield();                                 /* Yield as donation happenned due to a lower priority. */
   }
-
 
   ///PROJECT 1 END///
   

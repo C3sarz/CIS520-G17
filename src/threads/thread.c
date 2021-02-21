@@ -203,14 +203,14 @@ thread_create (const char *name, int priority,
 
   ///PROJECT 1 START///
 
-  t->donors_amount = 0;                     /* Inititalize donor list */
   int i;
-  for(i = 0; i < 10; i++)                   /* Inititalize donor list */
+  for(i = 0; i < 10; i++)                   /* Inititalize donor list. */
   {
-    t->priority_donors[i] = NULL;
+    t->donor_locks[i] = NULL;
   }
+  t->donors_amount = 0;                     /* Inititalize donor amount. */
 
-  if (priority > thread_get_priority ())
+  if (priority > thread_get_priority ())    /* Yields if new thread has a higher priority than the running one. */
     thread_yield ();
 
   ///PROJECT 1 END///
@@ -254,7 +254,7 @@ thread_unblock (struct thread *t)
 
   ///PROJECT 1 START///
 
-  list_insert_ordered(&ready_list, &t->elem, &highest_priority_first, NULL);           /* Adds the thread to the ready queue, which is now ordered by priority. */
+  list_insert_ordered(&ready_list, &t->elem, (list_less_func *)&highest_priority_first, NULL);           /* Adds the thread to the ready queue, which is now ordered by priority. */
 
   ///PROJECT 1 END///
 
@@ -331,7 +331,7 @@ thread_yield (void)
   /// PROJECT 1 START ///
 
   if (cur != idle_thread) 
-    list_insert_ordered(&ready_list, &cur->elem, &highest_priority_first, NULL);          /* Adds the thread to the ready queue, which is now ordered by priority. */
+    list_insert_ordered(&ready_list, &cur->elem, (list_less_func *)&highest_priority_first, NULL);          /* Adds the thread to the ready queue, which is now ordered by priority. */
 
   /// PROJECT 1 END ///
 
@@ -361,7 +361,7 @@ thread_foreach (thread_action_func *func, void *aux)
 
 /* Returns TRUE if thread A has a higher priority than Thread B */
 _Bool 
-highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB)
+highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB, void * unused)
 {
  struct thread * threadA = list_entry(elemA ,struct thread, elem);
  struct thread * threadB = list_entry(elemB ,struct thread, elem);
@@ -391,19 +391,20 @@ thread_get_priority (void)
 {
   struct thread * curr = thread_current();
 
-  if(curr->priority_is_donated)
+  if(curr->priority_is_donated)                         /* If priority is donated.... */
   {
     int i;
     int max = 0;
-    for(i = 0; i < curr->donors_amount; i++)
+
+    for(i = 0; i < curr->donors_amount; i++)              /* Iterates through the priority array to get highest priority */
     {
       if(curr->donated_priorities[i] > max)
         max = curr->donated_priorities[i];
     }
-    return max;
+    return max;                                           /* Returns highest priority found in array. */
   }
   else
-    return curr->priority;
+    return curr->priority;                              /* If priority is not donated, return actual prioprity . */
 
 }
 
@@ -412,91 +413,98 @@ thread_get_priority (void)
 void 
 thread_donate_priority(struct thread * receptor, struct lock * lock)
 {
-  if(!receptor->priority_is_donated)
+  if(!receptor->priority_is_donated)                              /* If first donation, store original priority. */
     receptor->original_priority = receptor->priority;
 
-  if(receptor->donors_amount < 9)
+  if(receptor->donors_amount < 9)                                 /* If donor array has not reached its limit.... */
   {
-    receptor->donors_amount++;
-    bool maxFound = false;
-    int current_priority = thread_get_priority();
-    struct lock * tempLock;
-    int tempPriority;
+    receptor->donors_amount++;                                /* Increase amount of donors */
+
+
+    /* Iterate through the ordered array and insert the donated priority
+        according to its value, highest first */
+
+    bool maxFound = false;                                    /* Flag to determine if a suitable place for the max priority has been found. */
+    int current_priority = thread_get_priority();             /* Get current thread priority for donation */
+    struct lock * nextLock;                                   /* Stores the lock to be replaced by the lock of the new highest priority. */
+    int nextPriority;                                         /* Stores the priority to be replaced by the new maximum. */
     int i;
-    for(i = 0; i < receptor->donors_amount; i++)
+
+    for(i = 0; i < receptor->donors_amount; i++)             /* Inserts the new priority donor lock in the ORDERED array of locks. */
     {
-      if(maxFound)
+      if(maxFound)                                              /* If the location for the item has already been inserted.... */
       {
-      struct lock * nextLock = receptor->priority_donors[i];
-      int nextPriority = receptor->donated_priorities[i];
+      struct lock * tempLock = receptor->donor_locks[i];    /* Grab current lock and priority, store them in temp values */
+      int tempPriority = receptor->donated_priorities[i];     
 
-      receptor->priority_donors[i] = tempLock;
-      receptor->donated_priorities[i] = tempPriority;
+      receptor->donor_locks[i] = nextLock;                  /* Replace them with old i-1 */
+      receptor->donated_priorities[i] = nextPriority;
 
-      tempLock = nextLock;
-      tempPriority = nextPriority;
+      nextLock = tempLock;                                      /* Store old values, for them to replace i+1 */
+      nextPriority = tempPriority;
       }
       
-      if(!maxFound &&
+      if(!maxFound &&                                        /* Check if current spot in array is suitable for value to be inserted.... */
         current_priority > receptor->donated_priorities[i])
       {
-        maxFound = true;
-        tempLock = receptor->priority_donors[i];
-        tempPriority = receptor->donated_priorities[i];
-        receptor->priority_donors[i] = lock;
-        receptor->donated_priorities[i] = current_priority;
-      }
-      
-    }
-    
+        maxFound = true;                                        /* Set flag as lcoation has been found */
 
-    receptor->priority_is_donated = true;
-    receptor->priority = thread_get_priority();
-    list_sort (&ready_list, &highest_priority_first, NULL);
+        nextLock = receptor->donor_locks[i];                /* Store current location values as they will be shifted right */
+        nextPriority = receptor->donated_priorities[i];
+
+        receptor->donor_locks[i] = lock;                    /* Replace current values with inserted values, old ones shifted right on next iteration */
+        receptor->donated_priorities[i] = current_priority;
+      }      
+    }    
+
+    receptor->priority_is_donated = true;                     /* Set donated priority flag. */
+    receptor->priority = thread_get_priority();               /* Update thread priority */
+    list_sort (&ready_list, &highest_priority_first, NULL);   /* Rearrange ready list as priority has changed */
   }
 }
 
-/* Restores current thread's donated priority to the original one before donation.*/
+/* Revokes a donated priority as its donating lock is released;
+    ONLY if the current lock is the corresponding donor lock! */
 void 
 thread_restore_priority(struct lock * lock)
 {
   struct thread * curr = thread_current();
 
-  if(curr->donors_amount == 1 &&
-		  curr->priority_donors[0] == lock)
+  if(curr->donors_amount == 1 &&                                      /* If this is the last donated priority and the lock belongs to the thread...*/
+		  curr->donor_locks[0] == lock)
   {
-    curr->donors_amount--;
-    curr->priority_is_donated = false;                                /* Resets donation flag. */
-    thread_set_priority(curr->original_priority); 
+    curr->donors_amount--;                                              /* Decrement donation counter */
+    curr->priority_is_donated = false;                                  /* Resets donation flag. */
+    thread_set_priority(curr->original_priority);                       /* Restores original priority */
   }
 
-  else if(curr->donors_amount <= 0)                            /* If no more donors... */
+  else if(curr->donors_amount <= 0)                                   /* Handler for an invalid case (thread has no priority donation). */
   {
-    ASSERT(false);  //crash
+    ASSERT(false);  //crash as we should not be here...
   }
 
-  else
-  {
+  else                                                                /* Iterator that removes the donor lock and its corresponding */
+  {                                                                   /*  priority from the ordered array of donor locks.           */
     int i;
-    bool itemRemoved = false;
-    for(i = 0; i<curr->donors_amount; i++)
+    bool itemRemoved = false;                                           /* Flag to know when the items have been removed */
+
+    for(i = 0; i<curr->donors_amount; i++)                              /* For all items in the ordered array.... */
     {
-      if(curr->priority_donors[i] == lock)
+      if(curr->donor_locks[i] == lock)                                /* If the current item is the lock we are removing, set the flag. */
         itemRemoved = true;
 
-      if(itemRemoved)
+      if(itemRemoved)                                                     /* If the item has been removed, shift the array left to fill up the gap. */
       {
-        curr->priority_donors[i] = curr->priority_donors[i+1];
+        curr->donor_locks[i] = curr->donor_locks[i+1];
         curr->donated_priorities[i] = curr->donated_priorities[i+1];
       }
     }
-    if(itemRemoved)
+
+    if(itemRemoved)                                                     /* If an item has been removed, reduce donor count and update priority */
     	curr->donors_amount--;
     thread_set_priority(thread_get_priority());
   }
 }
-
-
 
 ///PROJECT 1 END///
 

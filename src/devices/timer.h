@@ -16,7 +16,7 @@ int64_t timer_ticks (void);
 int64_t timer_elapsed (int64_t);
 
 /* Returns TRUE if thread A wakes up sooner than Thread B */
-_Bool smaller_wakeup_tick(const struct list_elem * elemA, const struct list_elem * elemB);
+_Bool smaller_wakeup_tick(const struct list_elem * elemA, const struct list_elem * elemB, void * unused);
 
 /* Sleep and yield the CPU to other threads. */
 void timer_sleep (int64_t ticks);

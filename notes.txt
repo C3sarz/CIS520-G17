@@ -43,7 +43,7 @@ pintos -v -k -T 60 -- -q run alarm-single //this will run a single test (in this
 	-modified lock_acquire()
 	-lock_try_acquire()
 	-lock_release()
-	-midified sema_down()
+	-semaphore waiters now ordered by priority.
 
 -synch.h:
 
