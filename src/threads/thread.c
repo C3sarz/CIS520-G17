@@ -398,7 +398,7 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
   struct thread *curr = thread_current();
 
   int inc = 0;
-  while (inc < 9)
+  while (inc < 8)
   {
     printf("%d\n", inc);
     if (curr->threads_donated_to[inc] == NULL)
@@ -425,7 +425,7 @@ void thread_donate_priority(struct thread *receptor, struct lock *lock)
     int nextPriority;                             /* Stores the priority to be replaced by the new maximum. */
     int i;
 
-    for (int inc2 = 0; inc2 < 9; inc2++)
+    for (int inc2 = 0; inc2 < 8; inc2++)
     {
       printf("%d\n", inc2);
       if (receptor->threads_donated_to[inc2] != NULL)
