@@ -126,11 +126,10 @@ timer_sleep (int64_t ticks)
   }
 
   struct thread * current = thread_current();                              /* Gets current thread. */
-  int64_t start = timer_ticks ();                                          /* Gets current system ticks. */
-  current->wake_up_tick = start + ticks;                                   /* Saves tick on which thread will be woken up. */
   ASSERT (intr_get_level () == INTR_ON);
 
-  intr_disable();                                                                                                     /* Turn OFF interrupts */
+  intr_disable();            
+  current->wake_up_tick = timer_ticks() + ticks;                                   /* Saves tick on which thread will be woken up. */                                                                                         /* Turn OFF interrupts */
   list_insert_ordered(&sleeping_thread_list, &current->elem, (list_less_func *)&smaller_wakeup_tick, NULL);           /* Adds current thread to ORDERED list of sleeping threads. */
   thread_block();                                                                                                     /* Block sleeping threads */
   intr_enable();                                                                                                      /* Turn ON interrupts */

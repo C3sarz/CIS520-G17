@@ -206,8 +206,9 @@ lock_acquire (struct lock *lock)
   if(lock->holder != NULL &&                              /* If lock is held by another lower priority thread... */
     lock->holder->priority < thread_get_priority())
   {
+    intr_disable();
     thread_donate_priority(lock->holder, lock);             /* Donate priority and yield. */
-    thread_yield();    
+    intr_enable();  
   }
 
   ///PROJECT 1 END///
@@ -255,7 +256,9 @@ lock_release (struct lock *lock)
 
   if(thread_current()->priority_is_donated)       /* If releasing a lock on a donated priority thread.... */
   {
+    intr_disable();
     thread_restore_priority(lock);                  /* If the lock belongs to this thread, revoke donation. */
+    intr_enable();
     thread_yield();                                 /* Yield as donation happenned due to a lower priority. */
   }
 
