@@ -44,32 +44,37 @@ Pintos Busy Wait Implementation, Marc Laroza (Ma06RC) -- https://github.com/Ma06
 
 >> A2: Briefly describe what happens in a call to your timer_sleep(),
 >> including the effects of the timer interrupt handler.
-	It pulls the current thread, pulls the current system ticks, saves the tick. 
-	Then it will turn off interrupts, add the current thread to the list of ordered threads, 
-	block sleeping threads and turn interrupts back on.
+
+When timer_sleep() is called, we first check if the ticks are greater than zero, if not we return immediately.
+We then grab the current system ticks and add the sleep ticks to it, and finally set the wake up time for the thread to the sum of the system ticks and the sleep ticks.
+
+We then add the current thread to the reverse priority queue sleeping_threads (smallest first) and then we block the thread. 
+Every timer interrupt we will check the front of the list for the thread that wakes up the soonest, and when the system ticks match with the wake up time for that thread, we start waking up (unblocking and removing from sleeping list) up ALL the threads that wake up at thatr specific tick, the reason for why we use a while loop instead of a simple if statement.
 	
 >> A3: What steps are taken to minimize the amount of time spent in
 >> the timer interrupt handler?
-	The list is checked before iterating. The list is checked again before iterating the case 
-	for two timers waking up on the same tick.
+
+To minimize the time in the handler we used a priority queue instead of a list or an array. As the front of the list will always be the thread that wakes up first, we avoid having to iterate through the list to determine which thread wakes up first.
 
 ---- SYNCHRONIZATION ----
 
 >> A4: How are race conditions avoided when multiple threads call
 >> timer_sleep() simultaneously?
-	The number of ticks is checked to make sure they are greater than 0.
+
+As we get the system ticks and set up the wake up tick when interrupts are disabled, there should be no race conditions.
 
 >> A5: How are race conditions avoided when a timer interrupt occurs
 >> during a call to timer_sleep()?
-	Interrupts are turned off while a thread is added to the list.
+
+Race conditions are avoided as interrupts are disabled for the critical section (modfying the sleeping thread list). This could also be achieved with a lock but this approach was simpler.
 
 
 ---- RATIONALE ----
 
 >> A6: Why did you choose this design?  In what ways is it superior to
 >> other designs that you considered?
-	It is relatively quick and easy to implement. I would say it is superior to our other 
-	designs because it works, and rather efficiently I might add.
+
+I chose this design as it heavily involved the list library, forcing me to understand its functions and capabilities better. Originally the sleeping list was a regular list, until I saw the use of a priority queue in another example, which was very clever in my opinion as it minimized the iterations and work to be done inside the timer interrupt. Therefore I decided to implement a similar prioirty queue system which resulted in a better implementation.
 
 
              PRIORITY SCHEDULING
@@ -110,11 +115,11 @@ Pintos Busy Wait Implementation, Marc Laroza (Ma06RC) -- https://github.com/Ma06
 		-int donated_priorities[10]
  		-int donors_amount
 		
-	The donor_locks array held locks that caused priority donation, and the priority of the donor thread is stored in tandem inside the donated_priorities array.
+	The donor_locks array holds locks that caused priority donation, and the priority of the donor thread is stored in tandem inside the donated_priorities array.
 	The donors_amount int is used to track the number of items inside the arrays, which is used in most array iterators to insert and remove items.
 	The donated priorities array is oredered, HIGHEST priotity first. The corresponding lock will be located at the same position in its array.
 	
-	To determine if a thread currently has a donated priority we created a boolean flag and and original priority integer, where the integer will store the original non-donated priority. original_priority is a flag that will be TRUE if the thread has ANY donated priority.
+	To determine if a thread currently has a donated priority we created a boolean flag and an integer "original-priority", where the integer stores the original non-donated priority. original_priority is a flag that will be TRUE if the thread has ANY donated priority.
 	
 		int original_priority;                 /* Keeps track of the priority before donation. */
         bool priority_is_donated;              /* Flag to determine if priority was donated by another thread. */
@@ -124,17 +129,22 @@ Pintos Busy Wait Implementation, Marc Laroza (Ma06RC) -- https://github.com/Ma06
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 	
-	To ensure the higher priority thread wakes up first we replaced the original list_pop_front function call in synch.c with a list_insert_ordered function. This function inserts threads to the waiter's queue, but now they are ordered by their priority (highest first). Whenever a lock gets released, the front item in the waiter's list will always be the highest priority thread.
+To ensure the higher priority thread wakes up first we replaced the original list_pop_front function call in synch.c with a list_insert_ordered function. This function inserts threads to the waiter's queue, but now they are ordered by their priority (highest first). Whenever a lock gets released, the front item in the waiter's list will always be the highest priority thread.
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
-------------------------------------------------------
+When we attempt to aquire a lock, we first check if it already has a holder, and if its priority is less than the current thread's. If so, we disable interrupts and call the thread_donate_priority function. We first save the original priority value to restore it after donations, and then verify if the donor_locks array is not out of bounds.
+If there is still space in the arrays, we insert the lock causing priority donation with the corresponding donated priority in the priorities array. After the array is ordered by the function, or if the priority value of the lock was simply replaced, we set the priority_is_donated flag and update the receptor thread's priority to the highest one available to it.
+
+The ready_list is then sorted as priorities changed, we eable interrupts back and finally enter the waiting list for the semaphore until the lock gets released. Nested priority IS NOT HANDLED!! Unfortunately I could not implement this feature.
 
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
 
-----------------------------------------------------------------
+When a lock is released, and a higher priority thread it waiting for it, we call the thread_restore_priority function. This function will remove the priority donation associated with the lock y removing that lock from the donor_locks array, as well as removing the corresponding priority from donated_priorities. The donor_amount integer will be decreased, and the array will be reordered so that the priorities in the array are kept in order by shifting the array right after the position of the removed item is found.
+
+We then re-sort the ready queue as priorities have changed, reset the lock holder, and finally release the semaphore.
 
 ---- SYNCHRONIZATION ----
 
@@ -142,7 +152,9 @@ Pintos Busy Wait Implementation, Marc Laroza (Ma06RC) -- https://github.com/Ma06
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
-----------------------------------------------------------
+A potantial race condition could arise if the thread is donated a priority right after it passes the priority_is_donated check. Our implementation avoids it by disabling interrupts. I would not recommend using a lock here as priorities are being modified, as it could cause priority inversion in the locks handling priority itself.
+
+After the donation arrays are handled, we re-sort the ready queue and yield, in order to allow the highest priority thread to retake control.
 
 ---- RATIONALE ----
 
