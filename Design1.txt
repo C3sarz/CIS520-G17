@@ -16,11 +16,16 @@ Grant Clothier <Grantxc5@ksu.edu>
 >> If you have any preliminary comments on your submission, notes for
 >> the TA, or extra credit, please give them here.
 
+An overview of modified files and added functions can be found at /pintos/notes.txt.
+A GitHub repository for this project can be found at https://github.com/C3sarz/CIS520-G17.
+
 >> Please cite any offline or online sources you consulted while
 >> preparing your submission, other than the Pintos documentation,
 >> course text, lecture notes, and course staff.
 
 GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforgeeks.org/time-delay-c.
+Pintos Eclipse Integration -- https://uchicago-cs.github.io/mpcs52030/pintos_eclipse.html
+Pintos Busy Wait Implementation, Marc Laroza (Ma06RC) -- https://github.com/Ma06RC/Pintos-Busy-Wait-
 
 
                  ALARM CLOCK
@@ -32,17 +37,8 @@ GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforg
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
----please reference the notes.txt document for full list of function modifications---
-
--timer.c
-	-struct list sleeping_thread_list;
-		list to keep track of threads to be woken up by the timer
--timer.h
-	-_Bool smaller_wakeup_tick(const struct list_elem * elemA, const struct list_elem * elemB);
-		returns true if thread A wakes up sooner than thread B
--thread.c
-	-various functions were modified, no new or changed structs/members, global variables, typedef, or enumeration.
-
++ modified thread struct (thread.h):
+    int64_t wake_up_tick;                  /* Tick on which the thread should be unblocked by the timer. */
 
 ---- ALGORITHMS ----
 
@@ -84,48 +80,61 @@ GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforg
 >> B1: Copy here the declaration of each new or changed `struct' or
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
--thread.c
-        -various functions were modified, no new or changed structs/members, global variables, typedef, or enumeration.
--thread.h
-        -int64_t wake_up_tick;
-                Tick on which the thread should be unblocked by the timer.
-        -int original_priority;
-                Keeps track of the priority before donation
-        -bool priority_is_donated;
-                Flag to determine if priority was donated by another thread
-        -struct lock * priority_donors[10];
-                Keeps track of priority donors and the donated priority
-        -int donated_priorities[10];
-                helps keeps track of the priority levels
-        -int donors_amount;
-                Used with the arrays to keep track of donors.
-        -_Bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB);
-                returns true if thread A has higher priority than thread B
-        -void thread_donate_priority(struct thread * receptor, struct lock * lock);
-                donates current thread max priority to the passed thread t.
-        -void thread_restore_priority(struct lock * lock);
-                restore current threads donated priority to the original one before donation.
 
--synch.c
-        -modified various functions but did not change definitions.
--synch.h
-        -no modifications yet.
++ modified thread struct (thread.h):
+
+	int64_t wake_up_tick;                   /* Tick on which the thread should be unblocked by the timer. */
+	int original_priority;                  /* Keeps track of the priority before donation. */
+	bool priority_is_donated;               /* Flag to determine if priority was donated by another thread. */
+	struct lock * donor_locks[10];          /* Ordered array of of locks that caused priority donation. */
+	int donated_priorities[10];		/* Donated priority corresponding to the i'th lock. */
+	int donors_amount;                      /* Used with the arrays to keep track of the amount of donors. */
+
++ new functions:
+	+thread
+			/* Returns TRUE if thread A has a higher priority than Thread B */
+		bool highest_priority_first(const struct list_elem * elemA, const struct list_elem * elemB, void * unused);
+		
+			/* Donates current thread MAX priority to the passed thread t. */
+		void thread_donate_priority(struct thread * receptor, struct lock * lock);
+		
+			/* Revokes a donated priority as its donating lock is released; ONLY if the current lock is the corresponding donor lock! */
+		void thread_restore_priority(struct lock * lock);
 
 
 >> B2: Explain the data structure used to track priority donation.
-	###explained above?####
+
+	To track priority donation we utilized two different ORDERED arrays and an integer:
+	
+		-struct lock * donor_locks[10]
+		-int donated_priorities[10]
+ 		-int donors_amount
+		
+	The donor_locks array held locks that caused priority donation, and the priority of the donor thread is stored in tandem inside the donated_priorities array.
+	The donors_amount int is used to track the number of items inside the arrays, which is used in most array iterators to insert and remove items.
+	The donated priorities array is oredered, HIGHEST priotity first. The corresponding lock will be located at the same position in its array.
+	
+	To determine if a thread currently has a donated priority we created a boolean flag and and original priority integer, where the integer will store the original non-donated priority. original_priority is a flag that will be TRUE if the thread has ANY donated priority.
+	
+		int original_priority;                 /* Keeps track of the priority before donation. */
+        bool priority_is_donated;              /* Flag to determine if priority was donated by another thread. */
 
 ---- ALGORITHMS ----
 
 >> B3: How do you ensure that the highest priority thread waiting for
 >> a lock, semaphore, or condition variable wakes up first?
 	
+	To ensure the higher priority thread wakes up first we replaced the original list_pop_front function call in synch.c with a list_insert_ordered function. This function inserts threads to the waiter's queue, but now they are ordered by their priority (highest first). Whenever a lock gets released, the front item in the waiter's list will always be the highest priority thread.
 
 >> B4: Describe the sequence of events when a call to lock_acquire()
 >> causes a priority donation.  How is nested donation handled?
 
+------------------------------------------------------
+
 >> B5: Describe the sequence of events when lock_release() is called
 >> on a lock that a higher-priority thread is waiting for.
+
+----------------------------------------------------------------
 
 ---- SYNCHRONIZATION ----
 
@@ -133,10 +142,15 @@ GeeksforGeeks. “Time Delay in C.” GeeksforGeeks, 18 Dec. 2019, www.geeksforg
 >> how your implementation avoids it.  Can you use a lock to avoid
 >> this race?
 
+----------------------------------------------------------
+
 ---- RATIONALE ----
 
 >> B7: Why did you choose this design?  In what ways is it superior to
 >> another design you considered?
+
+I first considered using lists instead of arrays to implement the donated priority tracking, but the lists eventually proved to be harder to debug than a simple array. Therefore problems were singnificantly harder to diagnose, and eventually I gave up and used arrays. 
+Other designs usually implement most of the logic in synch.c, but I preffered to have most of the work inside thread.c as it was in the same scope as the ready_list, which was very useful when debugging.
 
 
               ADVANCED SCHEDULER [EXTRA CREDIT]
