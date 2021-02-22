@@ -376,20 +376,22 @@ thread_set_priority (int new_priority)
 {
   struct thread * curr = thread_current();
 
+  intr_disable();
   if(curr->priority_is_donated)                                                   /* If this thread has a donated priority, change original (postpone). */
   {
     curr->original_priority = new_priority;
     return;
   }
 
-    curr->priority = new_priority;                                                 /* Sets the current thread's priority to NEW_PRIORITY. */
-    if(!list_empty(&ready_list))                                                                /* If the ready queue is NOT empty. */
-    {
-      list_sort (&ready_list, &highest_priority_first, NULL);
-      struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);    /* Get thread at the front of the ready queue (HIGHEST priority). */
-      if (readyFront->priority > new_priority)                                                  /* Yield to the front of the ready queue. */
-        thread_yield();
-    }
+  curr->priority = new_priority;                                                  /* Sets the current thread's priority to NEW_PRIORITY. */
+  intr_enable();
+  if(!list_empty(&ready_list))                                                                /* If the ready queue is NOT empty. */
+  {
+    list_sort (&ready_list, &highest_priority_first, NULL);
+    struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);    /* Get thread at the front of the ready queue (HIGHEST priority). */
+    if (readyFront->priority > new_priority)                                                  /* Yield to the front of the ready queue. */
+      thread_yield();
+  }
 }
 
 /* Returns the current thread's HIGHEST priority. */

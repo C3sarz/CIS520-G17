@@ -249,9 +249,6 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
-  lock->holder = NULL;
-  sema_up (&lock->semaphore);
-
   ///PROJECT 1 START///
 
   if(thread_current()->priority_is_donated)       /* If releasing a lock on a donated priority thread.... */
@@ -259,8 +256,11 @@ lock_release (struct lock *lock)
     intr_disable();
     thread_restore_priority(lock);                  /* If the lock belongs to this thread, revoke donation. */
     intr_enable();
-    thread_yield();                                 /* Yield as donation happenned due to a lower priority. */
   }
+
+  lock->holder = NULL;
+  sema_up (&lock->semaphore);
+  thread_yield();                                 /* Yield as donation happenned due to a lower priority. */
 
   ///PROJECT 1 END///
 
