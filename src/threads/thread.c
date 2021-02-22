@@ -370,19 +370,26 @@ highest_priority_first(const struct list_elem * elemA, const struct list_elem * 
 }
 
 
-/* Sets the current thread's priority to NEW_PRIORITY. */
+/* Sets the current thread's priority to NEW_PRIORITY, and postpones the change is priority donation is taking place. */
 void
 thread_set_priority (int new_priority)
 {
-  thread_current ()->priority = new_priority;                                                 /* Sets the current thread's priority to NEW_PRIORITY. */
+  struct thread * curr = thread_current();
 
-  if(!list_empty(&ready_list))                                                                /* If the ready queue is empty */
+  if(curr->priority_is_donated)                                                   /* If this thread has a donated priority, change original (postpone). */
   {
-    list_sort (&ready_list, &highest_priority_first, NULL);
-    struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);    /* Get thread at the front of the ready queue (HIGHEST priority) */
-  	if (readyFront->priority > new_priority)                                                  /* Yield to the front of the ready queue. */
-    	thread_yield();
+    curr->original_priority = new_priority;
+    return;
   }
+
+    curr->priority = new_priority;                                                 /* Sets the current thread's priority to NEW_PRIORITY. */
+    if(!list_empty(&ready_list))                                                                /* If the ready queue is NOT empty. */
+    {
+      list_sort (&ready_list, &highest_priority_first, NULL);
+      struct thread * readyFront = list_entry(list_front(&ready_list), struct thread, elem);    /* Get thread at the front of the ready queue (HIGHEST priority). */
+      if (readyFront->priority > new_priority)                                                  /* Yield to the front of the ready queue. */
+        thread_yield();
+    }
 }
 
 /* Returns the current thread's HIGHEST priority. */
@@ -407,7 +414,6 @@ thread_get_priority (void)
     return curr->priority;                              /* If priority is not donated, return actual prioprity . */
 
 }
-
 
 /* Donates current thread MAX priority to the passed thread t.*/
 void 
@@ -443,8 +449,14 @@ thread_donate_priority(struct thread * receptor, struct lock * lock)
       nextLock = tempLock;                                      /* Store old values, for them to replace i+1 */
       nextPriority = tempPriority;
       }
+
+      else if(receptor->donor_locks[i] == lock)                 /* If this lock has already donated a priority, */
+      {                                                         /*   replace it then break out of loop.         */
+        receptor->donated_priorities[i] = current_priority;
+        break;
+      }
       
-      if(!maxFound &&                                        /* Check if current spot in array is suitable for value to be inserted.... */
+      else if(!maxFound &&                                        /* Check if current spot in array is suitable for value to be inserted.... */
         current_priority > receptor->donated_priorities[i])
       {
         maxFound = true;                                        /* Set flag as lcoation has been found */
@@ -463,6 +475,7 @@ thread_donate_priority(struct thread * receptor, struct lock * lock)
   }
 }
 
+
 /* Revokes a donated priority as its donating lock is released;
     ONLY if the current lock is the corresponding donor lock! */
 void 
@@ -475,7 +488,7 @@ thread_restore_priority(struct lock * lock)
   {
     curr->donors_amount--;                                              /* Decrement donation counter */
     curr->priority_is_donated = false;                                  /* Resets donation flag. */
-    thread_set_priority(curr->original_priority);                       /* Restores original priority */
+    curr->priority = curr->original_priority;                       /* Restores original priority */
   }
 
   else if(curr->donors_amount <= 0)                                   /* Handler for an invalid case (thread has no priority donation). */
@@ -502,8 +515,9 @@ thread_restore_priority(struct lock * lock)
 
     if(itemRemoved)                                                     /* If an item has been removed, reduce donor count and update priority */
     	curr->donors_amount--;
-    thread_set_priority(thread_get_priority());
+    curr->priority = thread_get_priority();
   }
+  list_sort (&ready_list, &highest_priority_first, NULL);               /* Rearrange ready list as priority has changed */
 }
 
 ///PROJECT 1 END///

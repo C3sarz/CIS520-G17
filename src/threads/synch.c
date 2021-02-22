@@ -260,7 +260,7 @@ lock_release (struct lock *lock)
   }
 
   ///PROJECT 1 END///
-  
+
 }
 
 /* Returns true if the current thread holds LOCK, false

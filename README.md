@@ -24,7 +24,7 @@ TODO List:
 	- pass tests/threads/priority-donate-multiple2
 	- FAIL tests/threads/priority-donate-nest
 	- FAIL tests/threads/priority-donate-sema
-	- FAIL tests/threads/priority-donate-lower
+	- pass tests/threads/priority-donate-lower
 	- pass tests/threads/priority-fifo
 	- pass tests/threads/priority-preempt
 	- FAIL tests/threads/priority-sema
