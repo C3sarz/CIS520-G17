@@ -96,9 +96,9 @@ struct thread
     int64_t wake_up_tick;                  /* Tick on which the thread should be unblocked by the timer. */
     int original_priority;                 /* Keeps track of the priority before donation. */
     bool priority_is_donated;              /* Flag to determine if priority was donated by another thread. */
-    struct lock * donor_locks[10];         /* Ordered array of donor locks. */
+    struct lock * donor_locks[10];         /* Ordered array of of locks that caused priority donation. */
     int donated_priorities[10];		         /* Donated priority corresponding to the i'th lock. */
-    int donors_amount;                     /* Used with the arrays to keep track of donors. */
+    int donors_amount;                     /* Used with the arrays to keep track of the amount of donors. */
 
     ///PROJECT 1 END///
 
